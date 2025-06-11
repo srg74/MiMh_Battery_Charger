@@ -66,6 +66,7 @@ lv_color_t color_primary = lv_color_hex(0x303030); // gray
 lv_obj_t * timeLabel;
 lv_obj_t * dateLabel;
 lv_obj_t * infoLabel;
+lv_obj_t * chargeLabel;
 extern const lv_font_t rubik_140;
 lv_obj_t* tabview;
 lv_obj_t* dayButton;
@@ -425,8 +426,8 @@ void fsm_feed(){
     servo.writeMicroseconds(currentServoPos++);
     delay(3);
   }
-  // Show statis
-  lv_label_set_text_fmt(infoLabel, "Loading Cell...");
+  // Show status
+  lv_label_set_text_fmt(infoLabel, "Loading Cell...");  
   lv_timer_handler();
   // wait for the battery to drop into the feeder arm 
   delay(1000);
@@ -478,33 +479,33 @@ void fsm_charge(){
     chargingOK = false;
   }
 
+  lv_label_set_text_fmt(infoLabel, "");
+
   // update status label
   switch((millis() / 500) % 4){
     case 0: 
-      //lv_label_set_text_fmt(infoLabel, LV_SYMBOL_BATTERY_1);
-      lv_label_set_text_fmt(infoLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_1);
+      lv_label_set_text_fmt(chargeLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_1);
       break;
     case 1: 
-      lv_label_set_text_fmt(infoLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_2);
+      lv_label_set_text_fmt(chargeLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_2);
       break;
     case 2: 
-      lv_label_set_text_fmt(infoLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_3);
+      lv_label_set_text_fmt(chargeLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_3);
       break;
     case 3: 
-      lv_label_set_text_fmt(infoLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_FULL);
+      lv_label_set_text_fmt(chargeLabel, "%.2fV  %s", abs(getVBat()), LV_SYMBOL_BATTERY_FULL);
       break;
   }
   
   // Detect end of charge or fault condition
   if(digitalRead(CHG_STAT) == HIGH){
-    // clear info label
-    lv_label_set_text_fmt(infoLabel, "");
     fsm_currentState = ENDCHARGE;
   }  
 }
 
 void fsm_endcharge(){
   // update info label
+  lv_label_set_text_fmt(chargeLabel, "");
   lv_label_set_text_fmt(infoLabel, "Ejecting Cell...");
   lv_timer_handler();
   servo.attach(PWM_SERVO);
@@ -640,6 +641,14 @@ void setup() {
   lv_obj_set_style_text_font(infoLabel, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_obj_center(infoLabel);
   lv_obj_set_pos(infoLabel, 0, 74);
+
+  chargeLabel = lv_label_create(tab1);
+  lv_label_set_text(chargeLabel, "");
+  lv_obj_set_style_text_color(chargeLabel, lv_color_white(), LV_PART_MAIN);
+  lv_obj_set_style_text_font(chargeLabel, &lv_font_montserrat_24, LV_PART_MAIN);
+  lv_obj_set_width(chargeLabel, 130);
+  lv_obj_set_style_text_align(chargeLabel, LV_TEXT_ALIGN_RIGHT, 0);
+  lv_obj_set_pos(chargeLabel, 100, 166);
 
   // Eject Button
 
